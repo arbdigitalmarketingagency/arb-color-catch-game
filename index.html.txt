@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Catch Duel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: radial-gradient(circle at top, #0f2027, #203a43, #2c5364);
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+  }
+
+  #gameArea {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  #basket {
+    width: 100px;
+    height: 30px;
+    background: linear-gradient(to right, #00c6ff, #0072ff);
+    border-radius: 10px;
+    position: absolute;
+    bottom: 50px;
+    left: calc(50% - 50px);
+    transition: 0.1s ease;
+    box-shadow: 0 0 20px rgba(0,255,255,0.6);
+  }
+
+  .ball {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    position: absolute;
+    top: -50px;
+    animation: fall linear forwards;
+  }
+
+  @keyframes fall {
+    to { top: 100vh; }
+  }
+
+  #hud {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  #hud h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+
+  #target {
+    font-weight: bold;
+    color: #ffeb3b;
+  }
+
+  #score {
+    margin-top: 5px;
+    font-size: 20px;
+  }
+
+  #gameOver {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: none;
+  }
+
+  #gameOver h2 {
+    font-size: 36px;
+    margin-bottom: 15px;
+  }
+
+  button {
+    background: #00c6ff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 18px;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover { background: #0072ff; }
+</style>
+</head>
+<body>
+
+<div id="gameArea">
+  <div id="hud">
+    <h1>Catch the color: <span id="target">Blue</span></h1>
+    <div id="score">Score: 0</div>
+  </div>
+  <div id="basket"></div>
+  <div id="gameOver">
+    <h2>Game Over!</h2>
+    <p>Your Final Score: <span id="finalScore">0</span></p>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+  const colors = ["red", "yellow", "blue", "green", "purple"];
+  const basket = document.getElementById('basket');
+  const target = document.getElementById('target');
+  const scoreDisplay = document.getElementById('score');
+  const gameOverScreen = document.getElementById('gameOver');
+  const finalScore = document.getElementById('finalScore');
+  let score = 0;
+  let gameRunning = true;
+
+  let currentTarget = colors[Math.floor(Math.random() * colors.length)];
+  target.textContent = currentTarget;
+
+  // Basket movement
+  let basketX = window.innerWidth / 2 - 50;
+  document.addEventListener('mousemove', e => {
+    basketX = e.clientX - 50;
+    basket.style.left = basketX + 'px';
+  });
+
+  // Create falling balls
+  function createBall() {
+    if (!gameRunning) return;
+    const ball = document.createElement('div');
+    ball.classList.add('ball');
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    ball.style.background = color;
+    ball.style.left = Math.random() * (window.innerWidth - 30) + 'px';
+    const fallDuration = 3 + Math.random() * 2;
+    ball.style.animationDuration = fallDuration + 's';
+    document.body.appendChild(ball);
+
+    const fall = setInterval(() => {
+      const ballRect = ball.getBoundingClientRect();
+      const basketRect = basket.getBoundingClientRect();
+
+      if (
+        ballRect.bottom >= basketRect.top &&
+        ballRect.left < basketRect.right &&
+        ballRect.right > basketRect.left
+      ) {
+        if (color === currentTarget) {
+          score++;
+          scoreDisplay.textContent = `Score: ${score}`;
+          currentTarget = colors[Math.floor(Math.random() * colors.length)];
+          target.textContent = currentTarget;
+        } else {
+          endGame();
+        }
+        ball.remove();
+        clearInterval(fall);
+      }
+
+      if (ballRect.top > window.innerHeight) {
+        ball.remove();
+        clearInterval(fall);
+      }
+    }, 20);
+
+    setTimeout(createBall, 800 + Math.random() * 1000);
+  }
+
+  function endGame() {
+    gameRunning = false;
+    finalScore.textContent = score;
+    gameOverScreen.style.display = 'block';
+  }
+
+  function restartGame() {
+    score = 0;
+    scoreDisplay.textContent = "Score: 0";
+    currentTarget = colors[Math.floor(Math.random() * colors.length)];
+    target.textContent = currentTarget;
+    gameOverScreen.style.display = 'none';
+    gameRunning = true;
+    createBall();
+  }
+
+  createBall();
+</script>
+
+</body>
+</html>
